@@ -1,12 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth-context'
 import type { LogEntry } from '../../lib/types'
 import { formatDate, moodToEmoji, toDateInputValue } from '../../lib/date'
 
 const LOGS_PAGE_SIZE = 10
+const LOGS_LIST_STATE_KEY = 'echomirror.logsListState'
 
 type LogListResult = {
   rows: LogEntry[]
@@ -59,9 +60,30 @@ async function findExistingLogIdForDate(userId: string, dateValue: string): Prom
 export function LogsListPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [page, setPage] = useState(1)
+  const shouldRestoreScroll = useRef(true)
+  const [page, setPage] = useState(() => {
+    const stored = window.sessionStorage.getItem(LOGS_LIST_STATE_KEY)
+    if (!stored) return 1
+
+    try {
+      const parsed = JSON.parse(stored) as { page?: number }
+      return parsed.page && parsed.page > 0 ? parsed.page : 1
+    } catch {
+      return 1
+    }
+  })
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
+
+  const saveListState = (nextPage = page) => {
+    window.sessionStorage.setItem(
+      LOGS_LIST_STATE_KEY,
+      JSON.stringify({
+        page: nextPage,
+        scrollY: window.scrollY,
+      }),
+    )
+  }
 
   const handleExport = async () => {
     if (!user) return
@@ -115,6 +137,27 @@ export function LogsListPage() {
     placeholderData: keepPreviousData,
   })
 
+  useEffect(() => {
+    saveListState(page)
+  }, [page])
+
+  useEffect(() => {
+    if (!logsQuery.data || !shouldRestoreScroll.current) return
+
+    shouldRestoreScroll.current = false
+    const stored = window.sessionStorage.getItem(LOGS_LIST_STATE_KEY)
+    if (!stored) return
+
+    try {
+      const parsed = JSON.parse(stored) as { scrollY?: number }
+      if (typeof parsed.scrollY === 'number') {
+        window.scrollTo({ top: parsed.scrollY })
+      }
+    } catch {
+      window.sessionStorage.removeItem(LOGS_LIST_STATE_KEY)
+    }
+  }, [logsQuery.data])
+
   if (!user) {
     return null
   }
@@ -148,7 +191,12 @@ export function LogsListPage() {
 
         <div className="list-stack">
           {logsQuery.data?.rows.map((entry) => (
-            <Link to={`/logs/${entry.id}/edit`} className="list-card" key={entry.id}>
+            <Link
+              to={`/logs/${entry.id}/edit`}
+              className="list-card"
+              key={entry.id}
+              onClick={() => saveListState()}
+            >
               <div className="list-card-row">
                 <strong>{formatDate(entry.date)}</strong>
                 <span className="mood-chip">Mood {moodToEmoji(entry.mood)}</span>
@@ -166,9 +214,12 @@ export function LogsListPage() {
             </Link>
           ))}
 
-          {logsQuery.isLoading ? <div className="skeleton-line" /> : null}
+          {logsQuery.isFetching ? <div className="skeleton-line" /> : null}
           {!logsQuery.data?.rows.length && !logsQuery.isLoading ? (
             <p className="muted">No log entries yet.</p>
+          ) : null}
+          {logsQuery.data?.rows.length && page >= totalPages && !logsQuery.isFetching ? (
+            <p className="muted">No more entries.</p>
           ) : null}
         </div>
 
