@@ -120,3 +120,17 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
           retention-days: 14
+
+  supabase-db-tests:
+    name: Supabase SQL Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Run database tests
+        run: supabase test db
