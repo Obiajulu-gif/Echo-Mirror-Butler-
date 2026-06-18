@@ -378,6 +378,67 @@ textarea {
   gap: 0.6rem;
 }
 
+.page-error {
+  max-width: 640px;
+  margin: 48px auto;
+}
+
+.page-error-reference {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.page-error-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-error-actions a {
+  font-weight: 700;
+}
+
+.error-toast-region {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2000;
+  display: grid;
+  gap: 10px;
+  width: min(420px, calc(100vw - 40px));
+  pointer-events: none;
+}
+
+.error-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff;
+  color: #991b1b;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+  pointer-events: auto;
+}
+
+.error-toast button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+[data-theme='dark'] .error-toast {
+  border-color: #7f1d1d;
+  background: #1f2937;
+  color: #fecaca;
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;

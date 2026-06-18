@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "../components/layout/app-shell";
 import { SignInPanel } from "../components/auth/sign-in-panel";
@@ -73,10 +74,18 @@ function RequireAuth() {
   }
 
   return (
-    <ErrorBoundary>
-      <AppShell />
-    </ErrorBoundary>
+    <AppShell />
   );
+}
+
+function RouteBoundary({
+  name,
+  children,
+}: {
+  name: string;
+  children: ReactNode;
+}) {
+  return <ErrorBoundary routeName={name}>{children}</ErrorBoundary>;
 }
 
 export function AppRouter() {
@@ -115,15 +124,42 @@ export function AppRouter() {
       />
 
       <Route element={<RequireAuth />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/wallet" element={<WalletPage />} />
-        <Route path="/logs" element={<LogsListPage />} />
-        <Route path="/logs/new" element={<LogFormPage mode="create" />} />
-        <Route path="/logs/:id/edit" element={<LogFormPage mode="edit" />} />
-        <Route path="/insights" element={<InsightsPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/global-mirror" element={<GlobalMirrorPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route
+          path="/dashboard"
+          element={<RouteBoundary name="Dashboard"><DashboardPage /></RouteBoundary>}
+        />
+        <Route
+          path="/wallet"
+          element={<RouteBoundary name="Wallet"><WalletPage /></RouteBoundary>}
+        />
+        <Route
+          path="/logs"
+          element={<RouteBoundary name="Logs"><LogsListPage /></RouteBoundary>}
+        />
+        <Route
+          path="/logs/new"
+          element={<RouteBoundary name="New Log"><LogFormPage mode="create" /></RouteBoundary>}
+        />
+        <Route
+          path="/logs/:id/edit"
+          element={<RouteBoundary name="Edit Log"><LogFormPage mode="edit" /></RouteBoundary>}
+        />
+        <Route
+          path="/insights"
+          element={<RouteBoundary name="AI Insights"><InsightsPage /></RouteBoundary>}
+        />
+        <Route
+          path="/analytics"
+          element={<RouteBoundary name="Analytics"><AnalyticsPage /></RouteBoundary>}
+        />
+        <Route
+          path="/global-mirror"
+          element={<RouteBoundary name="Global Mirror"><GlobalMirrorPage /></RouteBoundary>}
+        />
+        <Route
+          path="/settings"
+          element={<RouteBoundary name="Settings"><SettingsPage /></RouteBoundary>}
+        />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
